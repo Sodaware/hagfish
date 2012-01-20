@@ -58,6 +58,7 @@ class HagfishController
 	protected $_actionMap;				/**< Array of URI => (class => method) */
 	protected $_templatePath;			/**< Path of the template directory */
 	protected $_parameters;				/**< Array of parameter names => values */
+	protected $_prefix;					/**< Rewrite prefix. User if in a subdirectory */
 	
 	
 	// ----------------------------------------------------------------------
@@ -71,6 +72,31 @@ class HagfishController
 	public function setTemplatePath($path)
 	{
 		$this->_templatePath = $path;
+	}
+	
+	/**
+	 * Sets the prefix. This will be stripped from the front of the request before
+	 * searching for actions. Use if running hagfish from a subdirectory.
+	 * 
+	 * For example, an app in example.org/my_app/ would use setPrefix->('my_app')
+	 * 
+	 * @param string $prefix Prefix to set.
+	 */
+	public function setPrefix($prefix)
+	{
+		
+		// Add slash to beginning if not present
+		if (substr($prefix, 0, 1) != '/') {
+			$prefix = '/' . $prefix;
+		}
+		
+		// Strip slash from end if present
+		if (substr($prefix, strlen($prefix) - 1, 1) == '/') {
+			$prefix = substr($prefix, 0, strlen($prefix) - 1); 
+		}
+		
+		$this->_prefix = $prefix;
+		
 	}
 	
 	/**
@@ -398,6 +424,11 @@ class HagfishController
 		
 		if (substr($requestName, strlen($requestName) - 1, 1) == '/') {
 			 $requestName = substr($requestName, 0, strlen($requestName) - 1);
+		}
+		
+		// Strip prefix if set
+		if (strpos($requestName, $this->_prefix) == 0) {
+			$requestName = substr($requestName, strlen($this->_prefix));
 		}
 		
 		return (!$requestName) ? 'default' : $requestName;
